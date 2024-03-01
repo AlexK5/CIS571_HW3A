@@ -216,6 +216,7 @@ module DatapathSingleCycle (
   logic [6:0] func7;
   logic [12:0] offset;
   logic [12:0] offsetshift;
+  logic [20:0] targ20;
   RegFile rf(.rd(rd), .rd_data(rd_data), .rs1(rs1), .rs1_data(rs1_data), .rs2(rs2), .rs2_data(rs2_data), .clk(clk), .we(we), .rst(rst));
 
   logic [31:0]inputone; 
@@ -224,8 +225,9 @@ module DatapathSingleCycle (
   logic [6:0] fun7;
   logic [6:0] opcode;
   logic [31:0] aluresult;
+  logic signeddivflag;
 
-  ALU al(.inputone(inputone), .inputtwo(inputtwo), .opcode(opcode), .fun3(fun3), .fun7(fun7), .aluresult(aluresult));
+  ALU al(.inputone(inputone), .inputtwo(inputtwo), .opcode(opcode), .fun3(fun3), .fun7(fun7), .signeddivflag(signeddivflag), .aluresult(aluresult));
 
 
   always_comb begin
@@ -238,6 +240,14 @@ module DatapathSingleCycle (
         we = 1'b1;
         rd = insn_from_imem[11:7];
         rd_data = {insn_from_imem[31:12], 12'b0};
+        pcNext = pcCurrent + 32'd4;
+      end
+
+      OpAuipc: begin
+        opcode = insn_opcode;
+        we = 1'b1;
+        rd = insn_from_imem[11:7];
+        rd_data = pcCurrent + {insn_from_imem[31:12], 12'b0};
         pcNext = pcCurrent + 32'd4;
       end
 
@@ -329,14 +339,37 @@ module DatapathSingleCycle (
         if(fun7==7'd0) begin
           inputtwo = rs2_data;
         end
+        if(fun7==7'd1) begin
+          inputtwo = rs2_data;
+        end
         if(fun7==7'd32) begin
           inputtwo = ~rs2_data;
         end
         rd_data = aluresult;
        end
 
-       3'b001: begin
-        rd_data = rs1_data << rs2_data[4:0];
+       3'b100: begin
+        if (fun7 == 7'd1) begin
+          inputone = rs1_data[31] == 0 ? rs1_data : ~(rs1_data) + 1;
+          inputtwo = rs2_data[31] == 0 ? rs2_data : ~(rs2_data) + 1;
+          signeddivflag = rs1_data[31] != rs2_data[31];
+        end else begin
+          inputone = rs1_data;
+          inputtwo = rs2_data;
+        end
+        rd_data = aluresult;
+       end
+
+       3'b110: begin
+        if (fun7 == 7'd1) begin
+          inputone = rs1_data[31] == 0 ? rs1_data : ~(rs1_data) + 1;
+          inputtwo = rs2_data[31] == 0 ? rs2_data : ~(rs2_data) + 1;
+          signeddivflag = rs1_data[31] == 1'b1;
+        end else begin
+          inputone = rs1_data;
+          inputtwo = rs2_data;
+        end
+        rd_data = aluresult;
        end
       
       default: begin 
@@ -438,8 +471,74 @@ module DatapathSingleCycle (
           pcNext = pcCurrent + 32'd4;
         end
        end
-
         default: begin end
+        endcase
+       end
+
+       OpJal: begin
+          targ20[20] = insn_from_imem[31];
+          targ20[10:1] = insn_from_imem[30:21];
+          targ20[11] = insn_from_imem[20];
+          targ20[19:12] = insn_from_imem[19:12];
+          targ20[0] = 0;
+          opcode = OpJal;
+          inputone = pcCurrent;
+          inputtwo = {{11{targ20[20]}}, targ20[20:0]};
+          pcNext = aluresult;
+          we = 1'b1;
+          rd = insn_from_imem[11:7];
+          rd_data = pcCurrent + 32'd4;
+       end
+
+       OpJalr: begin
+          we = 1'b1;
+          rd = insn_from_imem[11:7];
+          rd_data = pcCurrent + 32'd4;
+          rs1 = insn_from_imem[19:15];
+          pcNext = ((rs1_data + {{20{insn_from_imem[31]}}, insn_from_imem[31:20]}) & ~32'b1);
+       end
+
+       OpLoad: begin
+        opcode = insn_opcode;
+        fun3 = insn_from_imem[14:12];
+        we = 1'b1;
+        rd = insn_from_imem[11:7];
+        rs1 = insn_from_imem[19:15];
+        pcNext = pcCurrent + 32'd4;
+        store_we_to_dmem = 4'b0;
+        addr_to_dmem = (rs1_data + {{20{insn_from_imem[31]}}, insn_from_imem[31:20]}) & {{30{1'b1}},{2{1'b0}}};
+        inputone = load_data_from_dmem;
+        inputtwo = ((rs1_data + {{20{insn_from_imem[31]}}, insn_from_imem[31:20]}) << 3) & {{27{1'b0}}, {2{1'b1}} , {3{1'b0}}};
+        rd_data = aluresult;
+       end
+
+       OpStore: begin
+        opcode = insn_opcode;
+        fun3 = insn_from_imem[14:12];
+        we = 1'b0;
+        pcNext = pcCurrent + 32'd4;
+        rs1 = insn_from_imem[19:15];
+        rs2 = insn_from_imem[24:20];
+        imm = rs1_data + {{20{insn_from_imem[31]}}, insn_from_imem[31:25], insn_from_imem[11:7]};
+        
+        case (fun3)
+          3'b000: begin
+            store_we_to_dmem = 4'b1 << imm[1:0];
+            addr_to_dmem = imm & {{30{1'b1}},{2{1'b0}}};
+            store_data_to_dmem = rs2_data << {imm[1:0], 3'b0};
+          end
+          3'b001: begin
+            store_we_to_dmem = 4'b11 << imm[1:0];
+            addr_to_dmem = imm & {{30{1'b1}},{2{1'b0}}};
+            store_data_to_dmem = rs2_data << {imm[1:0], 3'b0};
+          end
+          3'b010: begin
+            store_we_to_dmem = 4'b1111;
+            addr_to_dmem = imm & {{30{1'b1}},{2{1'b0}}};
+            store_data_to_dmem = rs2_data << {imm[1:0], 3'b0};
+          end
+          default: begin end
+
         endcase
        end
 
@@ -459,11 +558,18 @@ module ALU (
   input logic [2:0]fun3,
   input logic [6:0]opcode,
   input logic [6:0]fun7,
+  input logic signeddivflag,
   output logic [31:0] aluresult
 );
 logic [31:0] claoutput;
+logic [31:0] quotient;
+logic [31:0] remainder;
 logic cin;
 cla cla(.a(inputone), .b(inputtwo), .cin(cin), .sum(claoutput));
+divider_unsigned div(.i_dividend(inputone), .i_divisor(inputtwo), .o_quotient(quotient), .o_remainder(remainder));
+
+logic [63:0] mulresult;
+logic [31:0] memaddress;
 
 always_comb begin
 case(opcode)
@@ -506,6 +612,38 @@ case(opcode)
   endcase
 end
 
+7'b11_011_11: begin
+  cin = 0;
+  aluresult = claoutput;
+end
+
+7'b00_000_11: begin
+  case(fun3)
+    3'b000: begin
+      memaddress = (inputone >> inputtwo[4:0]);
+      aluresult = {{24{memaddress[7]}}, memaddress[7:0]};
+    end
+    3'b001: begin
+      memaddress = (inputone >> inputtwo[4:0]);
+      aluresult = {{16{memaddress[15]}}, memaddress[15:0]};
+    end
+    3'b010: begin
+      memaddress = (inputone >> inputtwo[4:0]);
+      aluresult = memaddress;
+    end
+    3'b100: begin
+      memaddress = (inputone >> inputtwo[4:0]);
+      aluresult = {24'b0, memaddress[7:0]};
+    end
+    3'b101: begin
+      memaddress = (inputone >> inputtwo[4:0]);
+      aluresult = {16'b0, memaddress[15:0]};
+    end
+    default: begin end
+  endcase
+  
+end
+
 7'b01_100_11: begin
   case(fun3)
   3'b000: begin 
@@ -514,38 +652,94 @@ end
       cin = 0;
       aluresult = claoutput;
     end
+    7'd1: begin
+      mulresult = inputone * inputtwo;
+      aluresult = mulresult[31:0];
+    end
     7'd32: begin 
       cin = 1;
       aluresult = claoutput;
     end
-    default: begin end
+    default: begin 
+      aluresult = claoutput;
+    end
     endcase
-    aluresult = claoutput;
+  end
+
+  3'b001: begin
+    case (fun7)
+      7'd0: begin
+        aluresult = inputone << inputtwo[4:0];
+      end
+      7'd1: begin
+        mulresult = $signed(inputone) * $signed(inputtwo);
+        aluresult = mulresult[63:32];
+      end
+      default: begin
+        aluresult = claoutput;
+      end
+    endcase
   end
 
   3'b010: begin 
-    if($signed(inputone) < $signed(inputtwo)) begin
-      aluresult = 1;
-    end else begin
-      aluresult = 0;
-    end
+    case (fun7)
+      7'd0: begin
+        if($signed(inputone) < $signed(inputtwo)) begin
+          aluresult = 1;
+        end else begin
+          aluresult = 0;
+        end
+      end
+      7'd1: begin
+        mulresult = {{32{inputone[31]}}, inputone[31:0]} * {32'b0, inputtwo[31:0]};
+        aluresult = mulresult[63:32];
+      end
+      default: begin
+        aluresult = claoutput;
+      end
+    endcase
   end
 
   3'b011: begin 
-    if(inputone < inputtwo) begin
-      aluresult = 1;
-    end else begin
-      aluresult = 0;
-    end
+    case (fun7)
+      7'd0: begin
+        if(inputone < inputtwo) begin
+          aluresult = 1;
+        end else begin
+          aluresult = 0;
+        end
+      end
+      7'd1: begin
+        mulresult = inputone * inputtwo;
+        aluresult = mulresult[63:32];
+      end
+      default: begin
+        aluresult = claoutput;
+      end
+    endcase
   end
 
   3'b100: begin 
-    aluresult = inputone ^ inputtwo;
+    case (fun7)
+      7'd0: begin
+        aluresult = inputone ^ inputtwo;
+      end
+      7'd1: begin
+        aluresult = inputtwo == 32'b0 ? ({32{1'b1}}) : (signeddivflag ? ~(quotient) + 1 : quotient);
+      end
+      default: begin
+        aluresult = claoutput;
+      end
+    endcase
+    
   end
 
   3'b101: begin 
           if(fun7==7'd0) begin
             aluresult = inputone >> inputtwo[4:0];
+          end
+          if(fun7==7'd1) begin
+            aluresult = quotient;
           end
           if(fun7==7'd32) begin
             aluresult = $signed(inputone) >>> inputtwo[4:0];
@@ -553,11 +747,26 @@ end
   end
 
   3'b110: begin 
-    aluresult = inputone | inputtwo;
+    case (fun7)
+      7'd0: begin
+        aluresult = inputone | inputtwo;
+      end
+      7'd1: begin
+        aluresult = inputtwo == 32'b0 ? (inputone == 32'b0 ? 32'b0 : (signeddivflag ? {1'b1, 31'b0} : 32'b1)) : (signeddivflag ? ~(remainder) + 1 : remainder);
+      end
+      default: begin
+        aluresult = claoutput;
+      end
+    endcase
   end
 
   3'b111: begin 
-    aluresult = inputone & inputtwo;
+    if(fun7==7'd0) begin
+      aluresult = inputone & inputtwo;
+    end
+    if(fun7==7'd1) begin
+      aluresult = remainder;
+    end
   end
 
   default: begin end
