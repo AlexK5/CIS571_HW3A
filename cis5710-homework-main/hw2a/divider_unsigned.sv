@@ -10,7 +10,22 @@ module divider_unsigned (
     output wire [31:0] o_remainder,
     output wire [31:0] o_quotient
 );
+    wire [32:0][31:0] dividends;
+    wire [32:0][31:0] remainders;
+    wire [32:0][31:0] quotients;
 
+    assign dividends[0] = i_dividend;
+    assign remainders[0] = 0;
+    assign quotients[0] = 0;
+    
+    genvar i;
+    for (i = 0; i < 32; i = i + 1) begin
+      divu_1iter d(.i_dividend(dividends[i]), .i_divisor(i_divisor), .i_remainder(remainders[i]), .i_quotient(quotients[i]),
+                 .o_dividend(dividends[i+1]), .o_remainder(remainders[i+1]), .o_quotient(quotients[i+1]));
+    end
+
+    assign o_remainder = remainders[32];
+    assign o_quotient = quotients[32];
     // TODO: your code here
 
 endmodule
@@ -37,6 +52,22 @@ module divu_1iter (
         dividend = dividend << 1;
     }
     */
+
+  wire [31:0] r_or_in;
+  wire [31:0] divd_or_in;
+  wire [31:0] or_1_out;
+  wire geq_out;
+  wire [31:0] minus_out;
+  wire [31:0] or_2_out;
+  assign r_or_in = {i_remainder[30:0], 1'b0};
+  assign divd_or_in = {31'b0, i_dividend[31]};
+  assign or_1_out = r_or_in | divd_or_in;
+  assign o_dividend = {i_dividend[30:0], 1'b0};
+  assign geq_out = or_1_out >= i_divisor;
+  assign minus_out = or_1_out - i_divisor;
+  assign or_2_out = {i_quotient[30:0], 1'b0} | 32'b1;
+  assign o_remainder = geq_out ? minus_out : or_1_out;
+  assign o_quotient = geq_out ? or_2_out : {i_quotient[30:0], 1'b0};
 
     // TODO: your code here
 
