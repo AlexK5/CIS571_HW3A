@@ -1,0 +1,1 @@
+DatapathSingleCycle.sv system/OledDevice.sv system/mmcm.v system/debouncer.v system/delay_ms.v system/OLEDCtrl.v system/SpiCtrl.v system/RiscvSystem.sv

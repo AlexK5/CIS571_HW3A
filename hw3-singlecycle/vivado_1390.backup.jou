@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Thu Feb 29 21:03:16 2024
+# Process ID: 1390
+# Current directory: /mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle
+# Command line: vivado -mode batch -source ../common/tcl/build.tcl
+# Log file: /mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/vivado.log
+# Journal file: /mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/vivado.jou
+#-----------------------------------------------------------
+source ../common/tcl/build.tcl

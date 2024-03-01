@@ -1,0 +1,112 @@
+#-----------------------------------------------------------
+# Vivado v2020.2 (64-bit)
+# SW Build 3064766 on Wed Nov 18 09:12:47 MST 2020
+# IP Build 3064653 on Wed Nov 18 14:17:31 MST 2020
+# Start of session at: Thu Feb 29 21:03:16 2024
+# Process ID: 1390
+# Current directory: /mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle
+# Command line: vivado -mode batch -source ../common/tcl/build.tcl
+# Log file: /mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/vivado.log
+# Journal file: /mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/vivado.jou
+#-----------------------------------------------------------
+source ../common/tcl/build.tcl
+# set outputDir ./vivado_output
+# file mkdir $outputDir
+# proc get_file_contents { filename } {
+#     if {[catch {
+#         set FH [open $filename r]
+#         set content [read $FH]
+#         close $FH
+#     } errorstring]} {
+#         error " File $filename could not be opened : $errorstring "
+#     }
+#     return $content
+# }
+# if {[get_file_contents .step] == "synthesis"} { # just doing synthesis
+#     read_verilog [get_file_contents .synthesis-source-files]
+# } else { # going all the way to implementation
+#     read_verilog [get_file_contents .implementation-source-files]
+# }
+# set_part xc7z020clg484-1
+INFO: [Coretcl 2-1500] The part has been set to 'xc7z020clg484-1' for the current project only. Run set_part -help for more details. To evaluate different speed grades in the current design, use the set_speed_grade command, or use the open_checkpoint -part command to change the part used by an existing checkpoint design.
+# if { [string length [get_file_contents .ip-blocks]] > 0 } {
+#     read_ip [get_file_contents .ip-blocks]
+#     upgrade_ip [get_ips]
+# 
+#     # generate synthesis targets for IP blocks, so they will get synthesized by synth_design below
+#     if { [llength [get_ips]] > 0 } {
+#         generate_target all [get_ips]
+#         #synth_ip [get_ips charLib init_sequence_rom pixel_buffer] # <- doesn't work for some reason
+#     }
+# }
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/mnt/pollux/software/xilinx/2020.2/Vivado/2020.2/data/ip'.
+Upgrading 'charLib'
+INFO: [IP_Flow 19-3422] Upgraded charLib (Block Memory Generator 8.4) from revision 1 to revision 4
+INFO: [IP_Flow 19-1686] Generating 'Instantiation Template' target for IP 'charLib'...
+Upgrading 'init_sequence_rom'
+INFO: [IP_Flow 19-3422] Upgraded init_sequence_rom (Block Memory Generator 8.4) from revision 1 to revision 4
+INFO: [IP_Flow 19-1686] Generating 'Instantiation Template' target for IP 'init_sequence_rom'...
+Upgrading 'pixel_buffer'
+INFO: [IP_Flow 19-3422] Upgraded pixel_buffer (Block Memory Generator 8.4) from revision 1 to revision 4
+INFO: [IP_Flow 19-1686] Generating 'Instantiation Template' target for IP 'pixel_buffer'...
+INFO: [IP_Flow 19-1686] Generating 'Synthesis' target for IP 'charLib'...
+INFO: [IP_Flow 19-1686] Generating 'Simulation' target for IP 'charLib'...
+INFO: [IP_Flow 19-1686] Generating 'Miscellaneous' target for IP 'charLib'...
+INFO: [IP_Flow 19-1686] Generating 'Change Log' target for IP 'charLib'...
+INFO: [IP_Flow 19-1686] Generating 'Synthesis' target for IP 'init_sequence_rom'...
+INFO: [IP_Flow 19-1686] Generating 'Simulation' target for IP 'init_sequence_rom'...
+INFO: [IP_Flow 19-1686] Generating 'Miscellaneous' target for IP 'init_sequence_rom'...
+INFO: [IP_Flow 19-1686] Generating 'Change Log' target for IP 'init_sequence_rom'...
+INFO: [IP_Flow 19-1686] Generating 'Synthesis' target for IP 'pixel_buffer'...
+INFO: [IP_Flow 19-1686] Generating 'Simulation' target for IP 'pixel_buffer'...
+INFO: [IP_Flow 19-1686] Generating 'Miscellaneous' target for IP 'pixel_buffer'...
+INFO: [IP_Flow 19-1686] Generating 'Change Log' target for IP 'pixel_buffer'...
+# if {[get_file_contents .step] == "synthesis"} { # just doing synthesis
+#     synth_design -top [get_file_contents .top-synth-module] -part xc7z020clg484-1
+# 
+# } else { # going all the way to implementation instead
+#     if {[get_file_contents .top-impl-module] == ""} {
+#         error "This design has no top-level module defined for implementation. It can only be run through synthesis."
+#     }
+# 
+#     # only add constraint files if there are any
+#     if { [string length [get_file_contents .constraint-files]] > 0 } {
+#         read_xdc [get_file_contents .constraint-files]
+#     }
+# 
+#     # William's higher-optimization mode
+#     #synth_design -top [get_file_contents .top-impl-module] -part xc7z020clg484-1 -retiming -directive AreaOptimized_high -flatten_hierarchy full -gated_clock_conversion on
+#     synth_design -top [get_file_contents .top-impl-module] -part xc7z020clg484-1
+# }
+Command: synth_design -top RiscvSystem -part xc7z020clg484-1
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7z020'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7z020'
+INFO: [Device 21-403] Loading part xc7z020clg484-1
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 4 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 1724
+WARNING: [Synth 8-6901] identifier 'coutfinal2' is used before its declaration [../hw2b/cla.sv:92]
+ERROR: [Synth 8-2576] procedural assignment to a non-register store_we_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:508]
+ERROR: [Synth 8-2576] procedural assignment to a non-register addr_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:509]
+ERROR: [Synth 8-2576] procedural assignment to a non-register store_we_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:526]
+ERROR: [Synth 8-2576] procedural assignment to a non-register addr_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:527]
+ERROR: [Synth 8-2576] procedural assignment to a non-register store_data_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:528]
+ERROR: [Synth 8-2576] procedural assignment to a non-register store_we_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:531]
+ERROR: [Synth 8-2576] procedural assignment to a non-register addr_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:532]
+ERROR: [Synth 8-2576] procedural assignment to a non-register store_data_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:533]
+ERROR: [Synth 8-2576] procedural assignment to a non-register store_we_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:536]
+ERROR: [Synth 8-2576] procedural assignment to a non-register addr_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:537]
+ERROR: [Synth 8-2576] procedural assignment to a non-register store_data_to_dmem is not permitted [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:538]
+INFO: [Synth 8-2350] module DatapathSingleCycle ignored due to previous errors [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:48]
+INFO: [Synth 8-2350] module ALU ignored due to previous errors [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:555]
+INFO: [Synth 8-2350] module MemorySingleCycle ignored due to previous errors [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:785]
+INFO: [Synth 8-2350] module RiscvProcessor ignored due to previous errors [/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv:871]
+Failed to read verilog '/mnt/castor/seas_home/a/akeri13/CIS571_HW3A/hw3-singlecycle/DatapathSingleCycle.sv'
+INFO: [Common 17-83] Releasing license: Synthesis
+10 Infos, 1 Warnings, 0 Critical Warnings and 12 Errors encountered.
+synth_design failed
+ERROR: [Common 17-69] Command failed: Synthesis failed - please see the console or run log file for details
+INFO: [Common 17-206] Exiting Vivado at Thu Feb 29 21:04:03 2024...
